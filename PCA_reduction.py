@@ -19,12 +19,14 @@ print(df.head())
 # Exclude Patient ID, Timestamp, and Risk Category from PCA
 numerical_features = [
     'Heart Rate', 'Respiratory Rate', 'Body Temperature', 'Oxygen Saturation',
-    'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Age', 'Weight (kg)',
-    'Height (m)', 'Derived_HRV', 'Derived_Pulse_Pressure', 'Derived_BMI',
+    'Age', 'Derived_HRV', 'Derived_Pulse_Pressure', 'Derived_BMI',
     'Derived_MAP'
 ]
 
-# Extract numerical data
+# Extract numerical data - only use features that exist in the dataframe
+available_features = [f for f in numerical_features if f in df.columns]
+numerical_features = available_features
+
 X = df[numerical_features].copy()
 
 print(f"\nNumerical features for PCA: {len(numerical_features)}")
@@ -42,8 +44,8 @@ X_scaled = scaler.fit_transform(X)
 
 print("\nPerforming PCA...")
 
-# Apply PCA to retain 10 components
-pca = PCA(n_components=10)
+# Apply PCA to retain 9 components (can't exceed number of features)
+pca = PCA(n_components=9)
 X_pca = pca.fit_transform(X_scaled)
 
 print(f"\nPCA Results:")
@@ -86,9 +88,11 @@ df_pca = pd.DataFrame(X_pca, columns=pca_columns)
 
 # Add back the categorical features from original dataframe (excluding rows with NaN)
 df_filtered = df.loc[X.index]
-df_pca['Patient ID'] = df_filtered['Patient ID'].values
-df_pca['Gender'] = df_filtered['Gender'].values
-df_pca['Risk Category'] = df_filtered['Risk Category'].values
+df_pca['Gender'] = df_filtered['Gender'].values if 'Gender' in df.columns else 'Unknown'
+
+# Add Patient ID if available
+if 'Patient ID' in df.columns:
+    df_pca['Patient ID'] = df_filtered['Patient ID'].values
 
 print("\n" + "="*60)
 print("CLUSTERING-BASED ROW REDUCTION")
