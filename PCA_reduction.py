@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -41,8 +42,8 @@ X_scaled = scaler.fit_transform(X)
 
 print("\nPerforming PCA...")
 
-# Apply PCA to retain 95% of variance
-pca = PCA(n_components=0.95)
+# Apply PCA to retain 5 components
+pca = PCA(n_components=5)
 X_pca = pca.fit_transform(X_scaled)
 
 print(f"\nPCA Results:")
@@ -89,13 +90,26 @@ df_pca['Patient ID'] = df_filtered['Patient ID'].values
 df_pca['Gender'] = df_filtered['Gender'].values
 df_pca['Risk Category'] = df_filtered['Risk Category'].values
 
+print("\n" + "="*60)
+print("CLUSTERING-BASED ROW REDUCTION")
+print("="*60)
+
+# Keep all rows - no row reduction
+print(f"\nOriginal dataset size: {len(df_pca):,} rows")
+print(f"Keeping all rows for clustering tasks")
+
+# Create final dataset (no clustering-based reduction)
+df_pca_reduced = df_pca.copy()
+
+print(f"\nFinal dataset size: {len(df_pca_reduced):,} rows")
+
 # Save the PCA-reduced dataset
 output_file = 'HVS_PCA.csv'
-df_pca.to_csv(output_file, index=False)
+df_pca_reduced.to_csv(output_file, index=False)
 print(f"\nPCA-reduced dataset saved to '{output_file}'")
-print(f"New dataset shape: {df_pca.shape}")
+print(f"Final dataset shape: {df_pca_reduced.shape}")
 print(f"Dimensionality reduction: {len(numerical_features)} → {pca.n_components_} features")
-print(f"Data points: {len(df)} → {len(df_pca)}")
+print(f"All {len(df_pca_reduced):,} rows retained for clustering")
 
 # Print feature loadings (which original features contribute most to each PC)
 print("\n" + "="*60)
