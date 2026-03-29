@@ -42,8 +42,8 @@ X_scaled = scaler.fit_transform(X)
 
 print("\nPerforming PCA...")
 
-# Apply PCA to retain 5 components
-pca = PCA(n_components=5)
+# Apply PCA to retain 10 components
+pca = PCA(n_components=10)
 X_pca = pca.fit_transform(X_scaled)
 
 print(f"\nPCA Results:")
