@@ -1,0 +1,44 @@
+PCA COMPONENTS - 5 PRINCIPAL COMPONENTS
+========================================
+
+PC1: Blood Pressure & Cardiovascular Load (15.82% variance)
+
+Features:
+- Systolic Blood Pressure: 0.6872
+- Derived_Pulse_Pressure: 0.5130
+- Derived_MAP: 0.4982
+
+---
+
+PC2: Body Composition (15.34% variance)
+
+Features:
+- Derived_BMI: 0.7043
+- Weight (kg): 0.5348
+- Height (m): -0.4609
+
+---
+
+PC3: Diastolic Blood Pressure Regulation (14.95% variance)
+
+Features:
+- Diastolic Blood Pressure: 0.7086
+- Derived_MAP: 0.4998
+- Derived_Pulse_Pressure: -0.4850
+
+---
+
+PC4: Respiratory & Thermal Health (7.74% variance)
+
+Features:
+- Body Temperature: 0.5926
+- Respiratory Rate: 0.3438
+- Oxygen Saturation: 0.3180
+
+---
+
+PC5: Age-Related Heart Rate Patterns (7.73% variance)
+
+Features:
+- Age: 0.6653
+- Heart Rate: 0.5360

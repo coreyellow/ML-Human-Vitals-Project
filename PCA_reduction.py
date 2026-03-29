@@ -96,7 +96,7 @@ print("="*60)
 
 # Keep all rows - no row reduction
 print(f"\nOriginal dataset size: {len(df_pca):,} rows")
-print(f"Keeping all rows for clustering tasks")
+
 
 # Create final dataset (no clustering-based reduction)
 df_pca_reduced = df_pca.copy()
