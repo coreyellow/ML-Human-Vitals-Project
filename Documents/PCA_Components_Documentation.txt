@@ -1,44 +1,126 @@
-PCA COMPONENTS - 5 PRINCIPAL COMPONENTS
-========================================
+PCA COMPONENTS - 9 PRINCIPAL COMPONENTS
+=========================================
 
-PC1: Blood Pressure & Cardiovascular Load (15.82% variance)
-
-Features:
-- Systolic Blood Pressure: 0.6872
-- Derived_Pulse_Pressure: 0.5130
-- Derived_MAP: 0.4982
+DATASET: 200,020 patient records | 9 vital sign features
+TOTAL VARIANCE EXPLAINED: 100%
+DIMENSIONALITY: 9 features → 9 components
 
 ---
 
-PC2: Body Composition (15.34% variance)
+PC1: Arterial Pressure Metrics (11.75% variance)
 
-Features:
-- Derived_BMI: 0.7043
-- Weight (kg): 0.5348
-- Height (m): -0.4609
+Top Contributing Features:
+- Derived_Pulse_Pressure: 0.7057 (dominant)
+- Derived_MAP: 0.7009 (dominant)
+- Heart Rate: -0.0612 (minor)
 
----
-
-PC3: Diastolic Blood Pressure Regulation (14.95% variance)
-
-Features:
-- Diastolic Blood Pressure: 0.7086
-- Derived_MAP: 0.4998
-- Derived_Pulse_Pressure: -0.4850
+Interpretation: Captures overall cardiovascular pressure dynamics and hemodynamic load on the arterial system.
 
 ---
 
-PC4: Respiratory & Thermal Health (7.74% variance)
+PC2: Metabolic & Thermal Profile (11.20% variance)
 
-Features:
-- Body Temperature: 0.5926
-- Respiratory Rate: 0.3438
-- Oxygen Saturation: 0.3180
+Top Contributing Features:
+- Derived_HRV: 0.6063 (dominant)
+- Derived_BMI: 0.5539 (strong)
+- Body Temperature: -0.4461 (moderate)
+
+Interpretation: Represents metabolic health and body composition status alongside autonomic nervous system activity.
 
 ---
 
-PC5: Age-Related Heart Rate Patterns (7.73% variance)
+PC3: Age & Heart Rate (11.17% variance)
 
-Features:
-- Age: 0.6653
-- Heart Rate: 0.5360
+Top Contributing Features:
+- Heart Rate: 0.6285 (strong)
+- Age: 0.6136 (strong)
+
+Interpretation: Captures age-related physiological changes and their relationship to cardiac response patterns.
+
+---
+
+PC4: Respiratory & Oxygen Response (11.16% variance)
+
+Top Contributing Features:
+- Respiratory Rate: 0.7568 (dominant)
+- Oxygen Saturation: 0.3168 (moderate)
+- Body Temperature: 0.2805 (minor)
+
+Interpretation: Reflects pulmonary function and oxygenation status, with thermal influences.
+
+---
+
+PC5: Oxygen & Heart Rate Variability (11.12% variance)
+
+Top Contributing Features:
+- Oxygen Saturation: 0.7726 (dominant)
+- Heart Rate: 0.3516 (moderate)
+- Body Temperature: -0.4793 (moderate)
+
+Interpretation: Captures oxygen saturation levels and their relationship to cardiac variability and body thermoregulation.
+
+---
+
+PC6: Heart Rate Variability & Body Composition (11.06% variance)
+
+Top Contributing Features:
+- Derived_HRV: 0.7331 (dominant)
+- Derived_BMI: -0.5305 (moderate)
+- Body Temperature: 0.3242 (moderate)
+
+Interpretation: Represents autonomic nervous system tone (HRV) versus body composition metrics.
+
+---
+
+PC7: Age & Heart Rate Compensation (11.04% variance)
+
+Top Contributing Features:
+- Age: 0.6655 (strong)
+- Heart Rate: -0.5941 (moderate)
+
+Interpretation: Captures compensatory heart rate changes across different age groups.
+
+---
+
+PC8: Respiratory & Thermal Regulation (11.03% variance)
+
+Top Contributing Features:
+- Respiratory Rate: 0.5883 (moderate)
+- Body Temperature: -0.4983 (moderate)
+- Derived_BMI: -0.4969 (moderate)
+
+Interpretation: Reflects pulmonary-thermal regulation mechanisms and body composition influences.
+
+---
+
+PC9: Specialized Pressure Differential (10.47% variance)
+
+Top Contributing Features:
+- Derived_Pulse_Pressure: 0.7068 (strong)
+- Derived_MAP: -0.7013 (strong)
+- Oxygen Saturation: 0.0143 (minimal)
+
+Interpretation: Captures subtle pressure dynamics and differential vascular resistance patterns.
+
+---
+
+SUMMARY INSIGHTS
+================
+
+✓ All 9 vital signs retained → 100% variance explained
+✓ Balanced variance distribution across components (~11% each)
+✓ No significant information loss compared to original feature space
+✓ Components reveal multi-dimensional health patterns:
+  - Cardiovascular: PC1, PC5, PC9 (pressure & oxygenation)
+  - Respiratory: PC4, PC8 (breathing & temperature)
+  - Metabolic: PC2, PC6 (HRV, BMI, thermal)
+  - Age-Related: PC3, PC7 (aging physiology)
+
+USE CASES
+=========
+
+- Clustering patients into physiological phenotypes
+- Identifying multivariate risk factors
+- Reducing computational burden while preserving vital patterns
+- Feature visualization and exploration
+- Building downstream ML models with reduced dimensionality
