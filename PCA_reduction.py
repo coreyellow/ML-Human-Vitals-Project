@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
+import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+output_dir = 'PCA_output'
 
 # Load the dataset
 df = pd.read_csv('Datasets/human_vital_signs_dataset_2024.csv')
@@ -79,7 +82,7 @@ plt.title('PCA: Explained Variance by Component')
 plt.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('PCA_VAR_Analysis.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(output_dir, 'PCA_VAR_Analysis.png'), dpi=300, bbox_inches='tight')
 print("\nVisualization saved as 'PCA_VAR_Analysis.png'")
 
 # Create a DataFrame with PCA components
@@ -108,7 +111,7 @@ df_pca_reduced = df_pca.copy()
 print(f"\nFinal dataset size: {len(df_pca_reduced):,} rows")
 
 # Save the PCA-reduced dataset
-output_file = 'HVS_PCA.csv'
+output_file = os.path.join(output_dir, 'HVS_PCA.csv')
 df_pca_reduced.to_csv(output_file, index=False)
 print(f"\nPCA-reduced dataset saved to '{output_file}'")
 print(f"Final dataset shape: {df_pca_reduced.shape}")
@@ -143,7 +146,7 @@ if pca.n_components_ >= 2:
     plt.axhline(y=0, color='k', linewidth=1)
     plt.axvline(x=0, color='k', linewidth=1)
     plt.tight_layout()
-    plt.savefig('PCA_BIPLOT.png', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(output_dir, 'PCA_BIPLOT.png'), dpi=300, bbox_inches='tight')
     print("\nBiplot saved as 'PCA_BIPLOT.png'")
 
 print("\n✓ PCA analysis complete!")
