@@ -208,3 +208,4 @@ __marimo__/
 
 # Ignore PCA output contents
 PCA_output/*
+!PCA_output/.gitkeep
