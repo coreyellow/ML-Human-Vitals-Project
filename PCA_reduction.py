@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Load the dataset
-df = pd.read_csv('human_vital_signs_dataset_2024.csv')
+df = pd.read_csv('Datasets/human_vital_signs_dataset_2024.csv')
 
 print("Original dataset shape:", df.shape)
 print("\nColumn names:")
