@@ -10,7 +10,7 @@ import seaborn as sns
 output_dir = 'PCA_output'
 
 # Load the dataset
-df = pd.read_csv('Datasets/human_vital_signs_dataset_2024.csv')
+df = pd.read_csv('Datasets/pca_dataset.csv')
 
 print("Original dataset shape:", df.shape)
 print("\nColumn names:")
