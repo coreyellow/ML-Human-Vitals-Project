@@ -12,5 +12,18 @@ df = df.drop(columns=[
     'Height (m)'
 ])
 
+print("Reduced dataset shape: ", df.shape)
+
 df.to_csv('Datasets/reduced_dataset.csv', index=False)
     
+df_male = df[df['Gender'] == 'Male']
+df_female = df[df['Gender'] == 'Female']
+
+df_male = df_male.drop(columns=['Gender'])
+df_female = df_female.drop(columns=['Gender'])
+
+print("\nMale dataset shape: ", df_male.shape)
+print("Female dataset shape: ", df_female.shape)
+
+df_male.to_csv('Datasets/male_dataset.csv', index=False)
+df_female.to_csv('Datasets/female_dataset.csv', index=False)
