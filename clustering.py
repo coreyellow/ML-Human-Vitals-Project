@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.cluster import AgglomerativeClustering
-from sklearn.metrics import silhouette_score, fowlkes_mallows_score
+from sklearn.metrics import silhouette_score, fowlkes_mallows_score, adjusted_rand_score
 from sklearn.preprocessing import StandardScaler
 
 def get_largest_clusters_centers(labels, features, n_clusters=10):
@@ -88,6 +88,11 @@ if __name__ == "__main__":
         silhouette_female = silhouette_score(female_features_scaled, female_labels)
         print(f"\nSilhouette Score for Male Clustering: {silhouette_male:.4f}")
         print(f"Silhouette Score for Female Clustering: {silhouette_female:.4f}")
+
+        adjusted_rand_male = adjusted_rand_score(male_risk.flatten(), male_labels)
+        adjusted_rand_female = adjusted_rand_score(female_risk.flatten(), female_labels)
+        print(f"Adjusted Rand Score for Male Clustering: {adjusted_rand_male:.4f}")
+        print(f"Adjusted Rand Score for Female Clustering: {adjusted_rand_female:.4f}")
 
         fowlkes_mallows_male = fowlkes_mallows_score(male_risk.flatten(), male_labels)
         fowlkes_mallows_female = fowlkes_mallows_score(female_risk.flatten(), female_labels)
