@@ -76,4 +76,13 @@ if __name__ == "__main__":
     print_cluster_summary(female_labels, female_features, "FEMALE")
 
     # Evaluate clustering performance
+    silhouette_male = silhouette_score(male_features_scaled, male_labels)
+    silhouette_female = silhouette_score(female_features_scaled, female_labels)
+    print(f"\nSilhouette Score for Male Clustering: {silhouette_male:.4f}")
+    print(f"Silhouette Score for Female Clustering: {silhouette_female:.4f}")
+
+    fowlkes_mallows_male = fowlkes_mallows_score(male_risk.flatten(), male_labels)
+    fowlkes_mallows_female = fowlkes_mallows_score(female_risk.flatten(), female_labels)
+    print(f"Fowlkes-Mallows Score for Male Clustering: {fowlkes_mallows_male:.4f}")
+    print(f"Fowlkes-Mallows Score for Female Clustering: {fowlkes_mallows_female:.4f}")
 
