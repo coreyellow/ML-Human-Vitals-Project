@@ -48,7 +48,7 @@ if __name__ == "__main__":
     print("Features standardized successfully.")
 
     # Sample limit
-    limit = 5000
+    limit = 10000
     male_features_scaled = male_features_scaled[:limit]
     female_features_scaled = female_features_scaled[:limit]
     male_features = male_features.iloc[:limit]
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # Perform agglomerative clustering for each linkage type and threshold
     # Smaller distance_threshold = more clusters, larger distance_threshold = fewer clusters
     linkage_types = ['ward', 'complete', 'average', 'single']
-    distance_thresholds = [5, 10, 15, 20]
+    distance_thresholds = [1, 3, 5, 10, 20, 40]
     labels = {}
 
     for linkage in linkage_types:
@@ -84,7 +84,11 @@ if __name__ == "__main__":
             print(f"Male clusters formed: {len(set(male_labels))}")
             print(f"Female clusters formed: {len(set(female_labels))}")
 
+    # Save directory for evaluation and labels
+    save_directory = "Clustering_data/"
+
     # Evaluate clustering performance
+    evaluation_rows = []
     for linkage in linkage_types:
         for distance_threshold in distance_thresholds:
             print(f"\nEvaluating clustering performance for linkage={linkage}, distance_threshold={distance_threshold}...")
@@ -95,12 +99,14 @@ if __name__ == "__main__":
                 silhouette_male = silhouette_score(male_features_scaled, male_labels)
                 print(f"Silhouette Score for Male Clustering: {silhouette_male:.4f}")
             else:
+                silhouette_male = None
                 print("Silhouette Score for Male Clustering: could not compute (single cluster)")
 
             if len(set(female_labels)) > 1:
                 silhouette_female = silhouette_score(female_features_scaled, female_labels)
                 print(f"Silhouette Score for Female Clustering: {silhouette_female:.4f}")
             else:
+                silhouette_female = None
                 print("Silhouette Score for Female Clustering: could not compute (single cluster)")
 
             adjusted_rand_male = adjusted_rand_score(male_risk.flatten(), male_labels)
@@ -112,9 +118,33 @@ if __name__ == "__main__":
             fowlkes_mallows_female = fowlkes_mallows_score(female_risk.flatten(), female_labels)
             print(f"Fowlkes-Mallows Score for Male Clustering: {fowlkes_mallows_male:.4f}")
             print(f"Fowlkes-Mallows Score for Female Clustering: {fowlkes_mallows_female:.4f}")
+
+            evaluation_rows.append({
+                'linkage': linkage,
+                'distance_threshold': distance_threshold,
+                'gender': 'male',
+                'clusters': len(set(male_labels)),
+                'silhouette_score': silhouette_male,
+                'adjusted_rand_score': adjusted_rand_male,
+                'fowlkes_mallows_score': fowlkes_mallows_male
+            })
+            evaluation_rows.append({
+                'linkage': linkage,
+                'distance_threshold': distance_threshold,
+                'gender': 'female',
+                'clusters': len(set(female_labels)),
+                'silhouette_score': silhouette_female,
+                'adjusted_rand_score': adjusted_rand_female,
+                'fowlkes_mallows_score': fowlkes_mallows_female
+            })
+
+    # Save evaluation results to CSV
+    evaluation_df = pd.DataFrame(evaluation_rows)
+    evaluation_filepath = f"{save_directory}clustering_evaluation.csv"
+    evaluation_df.to_csv(evaluation_filepath, index=False)
+    print(f"Clustering evaluation metrics saved to {evaluation_filepath}.")
     
     # Save labels
-    save_directory = "Clustering_data/"
     save_linkage = 'ward'
     save_distance_threshold = 20
 
