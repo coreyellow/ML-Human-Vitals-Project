@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import joblib
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score, fowlkes_mallows_score, adjusted_rand_score
 from sklearn.preprocessing import StandardScaler
@@ -47,7 +48,7 @@ if __name__ == "__main__":
     print("Features standardized successfully.")
 
     # Sample limit
-    limit = 1000
+    limit = 5000
     male_features_scaled = male_features_scaled[:limit]
     female_features_scaled = female_features_scaled[:limit]
     male_features = male_features.iloc[:limit]
@@ -98,6 +99,18 @@ if __name__ == "__main__":
         fowlkes_mallows_female = fowlkes_mallows_score(female_risk.flatten(), female_labels)
         print(f"Fowlkes-Mallows Score for Male Clustering: {fowlkes_mallows_male:.4f}")
         print(f"Fowlkes-Mallows Score for Female Clustering: {fowlkes_mallows_female:.4f}")
-
+    
+    # Select labels to save
+    save_directory = "Clustering_data/"
+    save_distance_threshold = 20
+    
+    joblib.dump(labels[save_distance_threshold]['male'], f"{save_directory}male_clustering_labels.joblib")
+    joblib.dump(labels[save_distance_threshold]['female'], f"{save_directory}female_clustering_labels.joblib")
+    print(f"\nClustering labels for distance_threshold={save_distance_threshold} saved successfully.")
+    
+    # Save the scalers for future processing
+    joblib.dump(scaler_male, f"{save_directory}scaler_male.joblib")
+    joblib.dump(scaler_female, f"{save_directory}scaler_female.joblib")
+    print("Scalers saved successfully.")
     
 
