@@ -48,7 +48,7 @@ if __name__ == "__main__":
     print("Features standardized successfully.")
 
     # Sample limit
-    limit = 10000
+    limit = 1000
     male_features_scaled = male_features_scaled[:limit]
     female_features_scaled = female_features_scaled[:limit]
     male_features = male_features.iloc[:limit]
@@ -97,27 +97,19 @@ if __name__ == "__main__":
 
             if len(set(male_labels)) > 1:
                 silhouette_male = silhouette_score(male_features_scaled, male_labels)
-                print(f"Silhouette Score for Male Clustering: {silhouette_male:.4f}")
             else:
                 silhouette_male = None
-                print("Silhouette Score for Male Clustering: could not compute (single cluster)")
 
             if len(set(female_labels)) > 1:
                 silhouette_female = silhouette_score(female_features_scaled, female_labels)
-                print(f"Silhouette Score for Female Clustering: {silhouette_female:.4f}")
             else:
                 silhouette_female = None
-                print("Silhouette Score for Female Clustering: could not compute (single cluster)")
 
             adjusted_rand_male = adjusted_rand_score(male_risk.flatten(), male_labels)
             adjusted_rand_female = adjusted_rand_score(female_risk.flatten(), female_labels)
-            print(f"Adjusted Rand Score for Male Clustering: {adjusted_rand_male:.4f}")
-            print(f"Adjusted Rand Score for Female Clustering: {adjusted_rand_female:.4f}")
 
             fowlkes_mallows_male = fowlkes_mallows_score(male_risk.flatten(), male_labels)
             fowlkes_mallows_female = fowlkes_mallows_score(female_risk.flatten(), female_labels)
-            print(f"Fowlkes-Mallows Score for Male Clustering: {fowlkes_mallows_male:.4f}")
-            print(f"Fowlkes-Mallows Score for Female Clustering: {fowlkes_mallows_female:.4f}")
 
             evaluation_rows.append({
                 'linkage': linkage,
