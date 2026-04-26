@@ -58,56 +58,72 @@ if __name__ == "__main__":
     female_risk = female_risk[:limit]
     print(f"Data limited to {limit} samples for clustering.")
 
-    # Perform agglomerative clustering
+    # Perform agglomerative clustering for each linkage type and threshold
     # Smaller distance_threshold = more clusters, larger distance_threshold = fewer clusters
+    linkage_types = ['ward', 'complete', 'average', 'single']
     distance_thresholds = [5, 10, 15, 20]
     labels = {}
 
-    for distance_threshold in distance_thresholds:
-        print(f"\nPerforming agglomerative clustering with distance_threshold={distance_threshold}...")
-        male_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold)
-        female_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold)
-        
-        male_labels = male_agglo.fit_predict(male_features_scaled)
-        female_labels = female_agglo.fit_predict(female_features_scaled)
+    for linkage in linkage_types:
+        print(f"\nStarting agglomerative clustering for linkage='{linkage}'...")
+        labels[linkage] = {}
+        for distance_threshold in distance_thresholds:
+            print(f"Performing agglomerative clustering with linkage={linkage}, distance_threshold={distance_threshold}...")
+            male_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage)
+            female_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage)
+            
+            male_labels = male_agglo.fit_predict(male_features_scaled)
+            female_labels = female_agglo.fit_predict(female_features_scaled)
 
-        labels[distance_threshold] = {}
-        labels[distance_threshold]['male'] = male_labels
-        labels[distance_threshold]['female'] = female_labels
-        
-        print(f"Agglomerative clustering with distance_threshold={distance_threshold} performed successfully.")
-        print(f"Male clusters formed: {len(set(male_labels))}")
-        print(f"Female clusters formed: {len(set(female_labels))}")
+            labels[linkage][distance_threshold] = {
+                'male': male_labels,
+                'female': female_labels
+            }
+
+            print(f"Agglomerative clustering completed for linkage={linkage}, distance_threshold={distance_threshold}.")
+            print(f"Male clusters formed: {len(set(male_labels))}")
+            print(f"Female clusters formed: {len(set(female_labels))}")
 
     # Evaluate clustering performance
-    for distance_threshold in distance_thresholds:
-        print(f"\nEvaluating clustering performance for distance_threshold={distance_threshold}...")
-        male_labels = labels[distance_threshold]['male']
-        female_labels = labels[distance_threshold]['female']
+    for linkage in linkage_types:
+        for distance_threshold in distance_thresholds:
+            print(f"\nEvaluating clustering performance for linkage={linkage}, distance_threshold={distance_threshold}...")
+            male_labels = labels[linkage][distance_threshold]['male']
+            female_labels = labels[linkage][distance_threshold]['female']
 
-        silhouette_male = silhouette_score(male_features_scaled, male_labels)
-        silhouette_female = silhouette_score(female_features_scaled, female_labels)
-        print(f"\nSilhouette Score for Male Clustering: {silhouette_male:.4f}")
-        print(f"Silhouette Score for Female Clustering: {silhouette_female:.4f}")
+            if len(set(male_labels)) > 1:
+                silhouette_male = silhouette_score(male_features_scaled, male_labels)
+                print(f"Silhouette Score for Male Clustering: {silhouette_male:.4f}")
+            else:
+                print("Silhouette Score for Male Clustering: could not compute (single cluster)")
 
-        adjusted_rand_male = adjusted_rand_score(male_risk.flatten(), male_labels)
-        adjusted_rand_female = adjusted_rand_score(female_risk.flatten(), female_labels)
-        print(f"Adjusted Rand Score for Male Clustering: {adjusted_rand_male:.4f}")
-        print(f"Adjusted Rand Score for Female Clustering: {adjusted_rand_female:.4f}")
+            if len(set(female_labels)) > 1:
+                silhouette_female = silhouette_score(female_features_scaled, female_labels)
+                print(f"Silhouette Score for Female Clustering: {silhouette_female:.4f}")
+            else:
+                print("Silhouette Score for Female Clustering: could not compute (single cluster)")
 
-        fowlkes_mallows_male = fowlkes_mallows_score(male_risk.flatten(), male_labels)
-        fowlkes_mallows_female = fowlkes_mallows_score(female_risk.flatten(), female_labels)
-        print(f"Fowlkes-Mallows Score for Male Clustering: {fowlkes_mallows_male:.4f}")
-        print(f"Fowlkes-Mallows Score for Female Clustering: {fowlkes_mallows_female:.4f}")
+            adjusted_rand_male = adjusted_rand_score(male_risk.flatten(), male_labels)
+            adjusted_rand_female = adjusted_rand_score(female_risk.flatten(), female_labels)
+            print(f"Adjusted Rand Score for Male Clustering: {adjusted_rand_male:.4f}")
+            print(f"Adjusted Rand Score for Female Clustering: {adjusted_rand_female:.4f}")
+
+            fowlkes_mallows_male = fowlkes_mallows_score(male_risk.flatten(), male_labels)
+            fowlkes_mallows_female = fowlkes_mallows_score(female_risk.flatten(), female_labels)
+            print(f"Fowlkes-Mallows Score for Male Clustering: {fowlkes_mallows_male:.4f}")
+            print(f"Fowlkes-Mallows Score for Female Clustering: {fowlkes_mallows_female:.4f}")
     
-    # Select labels to save
+    # Save labels
     save_directory = "Clustering_data/"
+    save_linkage = 'ward'
     save_distance_threshold = 20
-    
-    joblib.dump(labels[save_distance_threshold]['male'], f"{save_directory}male_clustering_labels.joblib")
-    joblib.dump(labels[save_distance_threshold]['female'], f"{save_directory}female_clustering_labels.joblib")
-    print(f"\nClustering labels for distance_threshold={save_distance_threshold} saved successfully.")
-    
+
+    male_labels = labels[save_linkage][save_distance_threshold]['male']
+    female_labels = labels[save_linkage][save_distance_threshold]['female']
+    joblib.dump(male_labels, f"{save_directory}male_clustering_labels_{save_linkage}_{save_distance_threshold}.joblib")
+    joblib.dump(female_labels, f"{save_directory}female_clustering_labels_{save_linkage}_{save_distance_threshold}.joblib")
+    print(f"Saved male/female labels for linkage={save_linkage}, distance_threshold={save_distance_threshold}.")
+
     # Save the scalers for future processing
     joblib.dump(scaler_male, f"{save_directory}scaler_male.joblib")
     joblib.dump(scaler_female, f"{save_directory}scaler_female.joblib")
