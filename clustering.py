@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # Perform agglomerative clustering for each linkage type and threshold
     # Smaller distance_threshold = more clusters, larger distance_threshold = fewer clusters
     linkage_types = ['ward', 'complete', 'average', 'single']
-    distance_thresholds = [1, 3, 5, 10, 20, 40]
+    distance_thresholds = [1, 1.5, 2, 2.5, 3, 4, 5, 10, 20, 40]
     labels = {}
 
     # Precompute distance matrices for efficient silhouette score evaluation
