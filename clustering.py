@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
 import joblib
+from joblib import Memory
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score, fowlkes_mallows_score, adjusted_rand_score
 from sklearn.preprocessing import StandardScaler
+import os
 
 def get_largest_clusters_centers(labels, features, n_clusters=10):
     cluster_sizes = pd.Series(labels).value_counts().nlargest(n_clusters)
@@ -58,6 +60,15 @@ if __name__ == "__main__":
     female_risk = female_risk[:limit]
     print(f"Data limited to {limit} samples for clustering.")
 
+    # Setup memory caching for distance computations
+    cache_dir_male = "Clustering_data/cache_male"
+    cache_dir_female = "Clustering_data/cache_female"
+    os.makedirs(cache_dir_male, exist_ok=True)
+    os.makedirs(cache_dir_female, exist_ok=True)
+    
+    memory_male = Memory(cache_dir_male, verbose=1)
+    memory_female = Memory(cache_dir_female, verbose=1)
+
     # Perform agglomerative clustering for each linkage type and threshold
     # Smaller distance_threshold = more clusters, larger distance_threshold = fewer clusters
     linkage_types = ['ward', 'complete', 'average', 'single']
@@ -69,8 +80,8 @@ if __name__ == "__main__":
         labels[linkage] = {}
         for distance_threshold in distance_thresholds:
             print(f"Performing agglomerative clustering with linkage={linkage}, distance_threshold={distance_threshold}...")
-            male_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage)
-            female_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage)
+            male_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage, memory=memory_male)
+            female_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage, memory=memory_female)
             
             male_labels = male_agglo.fit_predict(male_features_scaled)
             female_labels = female_agglo.fit_predict(female_features_scaled)
