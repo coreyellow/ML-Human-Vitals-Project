@@ -50,21 +50,6 @@ if __name__ == "__main__":
     female_features_scaled = scaler_female.fit_transform(female_features)
     print("Features standardized successfully.")
 
-    # Remove outliers after standardization
-    z_score_threshold = 2.5
-
-    z_scores_male = np.abs((male_features_scaled - male_features_scaled.mean(axis=0)) / male_features_scaled.std(axis=0))
-    z_scores_female = np.abs((female_features_scaled - female_features_scaled.mean(axis=0)) / female_features_scaled.std(axis=0))
-    male_mask = (z_scores_male < z_score_threshold).all(axis=1)
-    female_mask = (z_scores_female < z_score_threshold).all(axis=1)
-    male_features_scaled = male_features_scaled[male_mask]
-    female_features_scaled = female_features_scaled[female_mask]
-    male_risk = male_risk[male_mask]
-    female_risk = female_risk[female_mask]
-    print("Outliers removed successfully.")
-    print(f"Male dataset shape after outlier removal: {male_features_scaled.shape}")
-    print(f"Female dataset shape after outlier removal: {female_features_scaled.shape}")
-
     # Sample limit
     limit = 10000
     male_features_scaled = male_features_scaled[:limit]
