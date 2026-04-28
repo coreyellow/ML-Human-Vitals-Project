@@ -50,7 +50,7 @@ if __name__ == "__main__":
     print("Features standardized successfully.")
 
     # Sample limit
-    limit = 1000
+    limit = 10000
     male_features_scaled = male_features_scaled[:limit]
     female_features_scaled = female_features_scaled[:limit]
     male_features = male_features.iloc[:limit]
