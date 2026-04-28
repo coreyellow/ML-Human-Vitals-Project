@@ -5,6 +5,7 @@ from joblib import Memory
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score, fowlkes_mallows_score, adjusted_rand_score
 from sklearn.preprocessing import StandardScaler
+from scipy.spatial.distance import pdist, squareform
 import os
 
 def get_largest_clusters_centers(labels, features, n_clusters=10):
@@ -75,11 +76,15 @@ if __name__ == "__main__":
     distance_thresholds = [1, 3, 5, 10, 20, 40]
     labels = {}
 
+    # Precompute distance matrices for efficient silhouette score evaluation
+    print("\nPrecomputing distance matrices for faster evaluation...")
+    male_distance_matrix = squareform(pdist(male_features_scaled, metric='euclidean'))
+    female_distance_matrix = squareform(pdist(female_features_scaled, metric='euclidean'))
+
     for linkage in linkage_types:
         print(f"\nStarting agglomerative clustering for linkage='{linkage}'...")
         labels[linkage] = {}
         for distance_threshold in distance_thresholds:
-            print(f"Performing agglomerative clustering with linkage={linkage}, distance_threshold={distance_threshold}...")
             male_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage, memory=memory_male)
             female_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage, memory=memory_female)
             
@@ -92,27 +97,25 @@ if __name__ == "__main__":
             }
 
             print(f"Agglomerative clustering completed for linkage={linkage}, distance_threshold={distance_threshold}.")
-            print(f"Male clusters formed: {len(set(male_labels))}")
-            print(f"Female clusters formed: {len(set(female_labels))}")
-
     # Save directory for evaluation and labels
     save_directory = "Clustering_data/"
 
     # Evaluate clustering performance
     evaluation_rows = []
+    print()
     for linkage in linkage_types:
         for distance_threshold in distance_thresholds:
-            print(f"\nEvaluating clustering performance for linkage={linkage}, distance_threshold={distance_threshold}...")
+            print(f"Evaluating clustering performance for linkage={linkage}, distance_threshold={distance_threshold}...")
             male_labels = labels[linkage][distance_threshold]['male']
             female_labels = labels[linkage][distance_threshold]['female']
 
             if len(set(male_labels)) > 1:
-                silhouette_male = silhouette_score(male_features_scaled, male_labels)
+                silhouette_male = silhouette_score(male_distance_matrix, male_labels, metric='precomputed')
             else:
                 silhouette_male = None
 
             if len(set(female_labels)) > 1:
-                silhouette_female = silhouette_score(female_features_scaled, female_labels)
+                silhouette_female = silhouette_score(female_distance_matrix, female_labels, metric='precomputed')
             else:
                 silhouette_female = None
 
