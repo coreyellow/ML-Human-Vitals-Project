@@ -15,8 +15,10 @@ if __name__ == "__main__":
     axes = axes.flatten()
     for i, feature in enumerate(features):
         # Bins for discrete features        
-        if feature in ['Oxygen Saturation']:
-            bins = max(len(np.unique(df_male[feature])), len(np.unique(df_female[feature])))
+        if feature in ['Oxygen Saturation', 'Respiratory Rate', 'Heart Rate', 'Age']:
+            low = int(min(df_male[feature].min(), df_female[feature].min()))
+            high = int(max(df_male[feature].max(), df_female[feature].max()))
+            bins = range(low, high + 1)
         else:
             bins = 'auto'
         
