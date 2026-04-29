@@ -75,10 +75,10 @@ def prepare_full_dataset():
 
             combined_data.append({
                 'Case ID': case_id,
-                'Heart Rate': row[1],
-                'Respiratory Rate': row[2],
-                'Body Temperature': row[3],
-                'Oxygen Saturation': row[4],
+                'Heart Rate': heart_rate,
+                'Respiratory Rate': respiratory_rate,
+                'Body Temperature': body_temp,
+                'Oxygen Saturation': spo2,
                 'Age': age,
                 'Gender': gender,
                 'Derived_HRV': hrv,
