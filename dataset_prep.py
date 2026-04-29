@@ -24,20 +24,32 @@ if __name__ == "__main__":
     cases_df = pd.read_csv(cases_csv)
 
     combined_data = []
+    problematic_cases = []
     
     for file in glob.glob(f'{data_dir}/lab_data/*.csv'):
-        case_id = file.split('/')[-1].split('.')[0]
-        df = pd.read_csv(file, header=None)
+        case_id = int(file.split('\\')[-1].split('.')[0])
+        df = pd.read_csv(file)
         
         # Metadata
-        case_metadata = cases_df[cases_df['Case ID'] == case_id]
-        age = case_metadata['age'].values[0]
+        case_metadata = cases_df[cases_df['caseid'] == case_id]
+        age = int(case_metadata['age'].values[0])
         gender = case_metadata['sex'].values[0]
-        bmi = case_metadata['bmi'].values[0]
+        bmi = float(case_metadata['bmi'].values[0])
         
         # Select 3 random samples from each case
         valid_rows = 0
+        attempts = 0
+        
         while valid_rows < 3:
+            # Avoid case with too many missing values
+            if attempts > 5000:
+                print(f"Too many attempts for case {case_id}, moving to next case.")
+                problematic_cases.append(case_id)
+                break
+            
+            print(f"Processing case {case_id}, attempt {attempts + 1}...", end='\r')
+            attempts += 1
+            
             row_df = df.sample(n=1)
             row_number = row_df.index[0]
             row = row_df.values[0]
@@ -46,16 +58,20 @@ if __name__ == "__main__":
             if any(pd.isnull(row)):
                 continue  
             
-            diastolic_bp = row[0]           # Solar8000/ART_DBP
-            systolic_bp = row[1]            # Solar8000/ART_SBP
-            body_temp = row[2]              # Solar8000/BT
-            heart_rate = row[3]             # Solar8000/HR
-            spo2 = row[4]                   # Solar8000/PLETH_SPO2
-            respiratory_rate = row[5]       # Solar8000/RR
+            diastolic_bp = float(row[0])           # Solar8000/ART_DBP
+            systolic_bp = float(row[1])            # Solar8000/ART_SBP
+            body_temp = float(row[2])              # Solar8000/BT
+            heart_rate = float(row[3])             # Solar8000/HR
+            spo2 = float(row[4])                   # Solar8000/PLETH_SPO2
+            respiratory_rate = float(row[5])       # Solar8000/RR
             
-            # Calculate HRV by looking back at the previous 1 minute of heart rate data
-            df_window = df[(df.index >= row_number - 30) & (df.index < row_number)]
-            hrv = df_window['Solar8000/HR'].std() / df_window['Solar8000/HR'].mean()
+            # Calculate HRV by looking back at previous heart rate values
+            if row_number < 100:
+                continue  # Skip if there aren't enough previous samples for HRV calculation
+            
+            df_window = df[(df.index >= row_number - 100) & (df.index < row_number)]
+            hr_window = df_window["Solar8000/HR"].astype(float)
+            hrv = hr_window.std() / hr_window.mean()
             
             # Remove noisy data points based on physiological plausibility
             if not (10 <= diastolic_bp <= 120
@@ -82,6 +98,9 @@ if __name__ == "__main__":
             })
             
             valid_rows += 1
+            print(f"Processed case {case_id}, samples: {valid_rows}/3")
 
     # Save combined dataset
+    print(f"Total combined samples: {len(combined_data)}")
+    print(f"Problematic cases: {len(problematic_cases)}")
     pd.DataFrame(combined_data).to_csv(f'{data_dir}/full_dataset.csv', index=False)
