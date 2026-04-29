@@ -8,9 +8,6 @@ if __name__ == "__main__":
     df_male = pd.read_csv('Datasets/male_dataset.csv')
     df_female = pd.read_csv('Datasets/female_dataset.csv')
     
-    df_male = df_male.drop(columns=['Risk Category'])
-    df_female = df_female.drop(columns=['Risk Category'])
-
     features = df_male.columns.tolist()
     print(df_male[features].describe())
     
@@ -18,7 +15,7 @@ if __name__ == "__main__":
     axes = axes.flatten()
     for i, feature in enumerate(features):
         # Bins for discrete features        
-        if feature in ['Heart Rate', 'Respiratory Rate', 'Age']:
+        if feature in ['Oxygen Saturation']:
             bins = max(len(np.unique(df_male[feature])), len(np.unique(df_female[feature])))
         else:
             bins = 'auto'
