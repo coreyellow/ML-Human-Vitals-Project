@@ -1,0 +1,296 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ══════════════════════════════════════
+   GLOBAL
+══════════════════════════════════════ */
+html, body, [data-testid="stAppViewContainer"] {
+    background-color: #f0f4f8;
+    color: #1a202c;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+[data-testid="stAppViewContainer"]::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4, #6366f1);
+    z-index: 9999;
+}
+
+[data-testid="block-container"] {
+    padding: 2.5rem 3rem 4rem 3rem;
+    max-width: 1150px;
+    margin: 0 auto;
+}
+
+/* ══════════════════════════════════════
+   TYPOGRAPHY
+══════════════════════════════════════ */
+h1 {
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    color: #1e3a5f !important;
+    letter-spacing: -0.02em;
+}
+
+h2, h3 {
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    color: #3b82f6 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
+    margin-bottom: 0.75rem !important;
+}
+
+p, span, li {
+    color: #374151 !important;
+    line-height: 1.65;
+}
+
+/* ══════════════════════════════════════
+   INPUTS
+══════════════════════════════════════ */
+label[data-testid="stWidgetLabel"] p {
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    letter-spacing: 0.01em;
+}
+
+[data-testid="stNumberInput"] input {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    background: #f8fafc !important;
+    color: #1a202c !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+[data-testid="stNumberInput"] input:focus {
+    border-color: #3b82f6 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    outline: none !important;
+}
+
+/* ══════════════════════════════════════
+   RADIO (GENDER SELECTOR)
+══════════════════════════════════════ */
+[data-testid="stRadio"] p,
+[data-testid="stRadio"] label,
+[data-testid="stRadio"] span,
+[data-testid="stRadio"] div {
+    color: #374151 !important;
+    font-size: 0.95rem !important;
+}
+
+/* ══════════════════════════════════════
+   METRIC CARDS
+══════════════════════════════════════ */
+[data-testid="stMetric"] {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.2rem !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+[data-testid="stMetric"]:hover {
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
+    border-color: #bfdbfe;
+}
+
+[data-testid="stMetricLabel"] {
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+}
+
+[data-testid="stMetricValue"] {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #1e3a5f !important;
+}
+
+/* ══════════════════════════════════════
+   RUN BUTTON
+══════════════════════════════════════ */
+[data-testid="stButton"] > button[kind="primary"] {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.03em;
+    padding: 0.7rem 1.5rem !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stButton"] > button[kind="primary"]:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45) !important;
+    transform: translateY(-1px);
+}
+
+[data-testid="stButton"] > button[kind="primary"]:active {
+    transform: translateY(0px);
+}
+
+/* ══════════════════════════════════════
+   ALERTS
+══════════════════════════════════════ */
+[data-testid="stAlert"] {
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+    background: #f0fdf4 !important;
+    border-left: 4px solid #16a34a !important;
+    color: #15803d !important;
+}
+
+/* ══════════════════════════════════════
+   DATAFRAME
+══════════════════════════════════════ */
+[data-testid="stDataFrame"] {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    overflow: hidden;
+}
+
+/* ══════════════════════════════════════
+   EXPANDER
+══════════════════════════════════════ */
+[data-testid="stExpander"] {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+/* ══════════════════════════════════════
+   DIVIDER
+══════════════════════════════════════ */
+hr {
+    border-color: #e2e8f0 !important;
+    margin: 1.5rem 0 !important;
+}
+
+/* ── Title ── */
+h1 {
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+}
+
+/* ── Subheaders ── */
+h2, h3 {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem !important;
+}
+
+/* ── Divider ── */
+hr {
+    border-color: #e5e7eb !important;
+    margin: 1.2rem 0 !important;
+}
+
+/* ── Labels ── */
+label[data-testid="stWidgetLabel"] p {
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    color: #6b7280 !important;
+}
+
+/* ── Number inputs ── */
+[data-testid="stNumberInput"] input {
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 0.95rem !important;
+}
+[data-testid="stNumberInput"] input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.2) !important;
+    outline: none !important;
+}
+
+/* ── Metric cards ── */
+[data-testid="stMetric"] {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.9rem 1rem !important;
+}
+[data-testid="stMetricLabel"] {
+    font-size: 0.75rem !important;
+    color: #6b7280 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+[data-testid="stMetricValue"] {
+    font-size: 1.4rem !important;
+    font-weight: 700 !important;
+    color: #1d4ed8 !important;
+}
+
+/* ── Primary button ── */
+[data-testid="stButton"] > button[kind="primary"] {
+    background-color: #2563eb !important;
+    border: none !important;
+    border-radius: 6px !important;
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    padding: 0.55rem 1.2rem !important;
+    transition: background-color 0.15s ease;
+}
+[data-testid="stButton"] > button[kind="primary"]:hover {
+    background-color: #1d4ed8 !important;
+}
+
+/* ── Success banner ── */
+[data-testid="stAlert"] {
+    background: #f0fdf4 !important;
+    border-left: 4px solid #16a34a !important;
+    border-radius: 6px !important;
+    color: #15803d !important;
+    font-weight: 600 !important;
+}
+
+/* ── Dataframe ── */
+[data-testid="stDataFrame"] {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* ── Expander ── */
+[data-testid="stExpander"] {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+}
+
+/* ── Radio buttons ── */
+[data-testid="stRadio"] p,
+[data-testid="stRadio"] label,
+[data-testid="stRadio"] span,
+[data-testid="stRadio"] div {
+    color: #111827 !important;
+    font-size: 0.95rem !important;
+}
+
+/* ── General text safety net ── */
+p, span, div, li {
+    color: #111827;
+}
