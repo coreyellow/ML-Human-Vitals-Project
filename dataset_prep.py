@@ -1,19 +1,9 @@
 import pandas as pd
-import csv
 import glob
 
 data_dir = 'Datasets'
 
 if __name__ == "__main__":
-    track_names = [
-        'Solar8000/ART_DBP',
-        'Solar8000/ART_SBP',
-        'Solar8000/BT',
-        'Solar8000/HR',
-        'Solar8000/PLETH_SPO2',
-        'Solar8000/RR' 
-    ]
-    
     # Create full dataset by combining all individual case CSV files
     # Column names:
     # Case ID, Heart Rate, Respiratory Rate, Body Temperature, Oxygen Saturation, Age, Gender, Derived_HRV, Derived_Pulse_Pressure, Derived_BMI, Derived_MAP
