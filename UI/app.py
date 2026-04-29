@@ -168,21 +168,21 @@ col1, col2, col3 = st.columns(3, gap="large")
 
 with col1:
     st.subheader("Core Vitals")
-    heart_rate       = st.number_input("Heart Rate (bpm)",               value=75,   step=1)
-    respiratory_rate = st.number_input("Respiratory Rate (breaths/min)", value=16,   step=1)
-    body_temp        = st.number_input("Body Temperature (C)",           value=36.6, step=0.1, format="%.1f")
-    oxygen_sat       = st.number_input("Oxygen Saturation (%)",          value=98,   step=1)
-    age              = st.number_input("Age (years)",                    value=45,   step=1)
+    heart_rate       = st.number_input("Heart Rate (bpm)",               value=75,   step=1,   min_value=0)
+    respiratory_rate = st.number_input("Respiratory Rate (breaths/min)", value=16,   step=1,   min_value=0)
+    body_temp        = st.number_input("Body Temperature (C)",           value=36.6, step=0.1, min_value=0.0, format="%.1f")
+    oxygen_sat       = st.number_input("Oxygen Saturation (%)",          value=98,   step=1,   min_value=0,   max_value=100)
+    age              = st.number_input("Age (years)",                    value=45,   step=1,   min_value=0)
 
 with col2:
     st.subheader("Blood Pressure & BMI")
-    systolic_bp  = st.number_input("Systolic BP (mmHg)",  value=120,  step=1)
-    diastolic_bp = st.number_input("Diastolic BP (mmHg)", value=80,   step=1)
-    bmi          = st.number_input("BMI (kg/m2)",         value=24.0, step=0.1, format="%.1f")
+    systolic_bp  = st.number_input("Systolic BP (mmHg)",  value=120,  step=1,   min_value=0)
+    diastolic_bp = st.number_input("Diastolic BP (mmHg)", value=80,   step=1,   min_value=0)
+    bmi          = st.number_input("BMI (kg/m2)",         value=24.0, step=0.1, min_value=0.0, format="%.1f")
 
 with col3:
     st.subheader("Heart Rate Variability")
-    hrv = st.number_input("HRV", value=0.05, step=0.001, format="%.3f")
+    hrv = st.number_input("HRV", value=0.05, step=0.001, min_value=0.0, format="%.3f")
 
 st.divider()
 
