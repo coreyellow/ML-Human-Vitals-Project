@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # Load CSS
-css = (Path(__file__).parent / "style.css").read_text()
+css = (Path(__file__).parent / "style.css").read_text(encoding="utf-8")
 st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 # Paths
