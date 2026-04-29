@@ -294,3 +294,8 @@ label[data-testid="stWidgetLabel"] p {
 p, span, div, li {
     color: #111827;
 }
+
+/* ── Hide "Press Enter to apply" hint ── */
+[data-testid="InputInstructions"] {
+    display: none !important;
+}
