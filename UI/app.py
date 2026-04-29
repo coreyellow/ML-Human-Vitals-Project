@@ -62,7 +62,7 @@ def load_artefacts():
     def cluster_means(df, labels):
         sub = df[FEATURE_COLS].iloc[: len(labels)].copy()
         sub["_cluster"] = labels
-        return sub.groupby("_cluster")[FEATURE_COLS].mean()
+        return sub.groupby("_cluster")[FEATURE_COLS].agg(["mean", "std", "min", "max"])
 
     male_means   = cluster_means(df_male,   labels_male)
     female_means = cluster_means(df_female, labels_female)
@@ -101,9 +101,21 @@ def predict_cluster(feature_vec, scaler, centers):
 
 
 def get_health_assessment(patient_data: dict) -> str:
+    cs = patient_data["cluster_stats"]  # dict keyed by feature -> {mean, std, min, max}
+
+    def fmt(feat, unit="", normal=""):
+        m  = cs[feat]["mean"]
+        sd = cs[feat]["std"]
+        lo = cs[feat]["min"]
+        hi = cs[feat]["max"]
+        line = f"  {feat}: {m:.2f} ± {sd:.2f} {unit}  [range: {lo:.2f}–{hi:.2f}]"
+        if normal:
+            line += f"  (normal: {normal})"
+        return line
+
     prompt = f"""
-You are a clinical health analyst reviewing a patient's vital signs. 
-Your job is to give a clear verdict on whether this patient is healthy or needs to seek medical help.
+You are a clinical health analyst reviewing a patient cluster's vital sign statistics.
+Your job is to give a clear verdict on whether patients in this cluster are likely healthy or should seek medical help.
 
 Follow this exact structure in your response:
 
@@ -111,29 +123,26 @@ Follow this exact structure in your response:
    - "Your vitals look healthy. You do not need to seek medical attention at this time."
    - "Based on your vitals, you should seek medical attention."
 
-2. Then explain why in plain English. If something is wrong, name exactly which vital is abnormal, what the normal range is, what it currently reads, and what condition or disease it could indicate. If everything is fine, briefly confirm which vitals are normal and why that is a good sign.
+2. Then explain why in plain English. If something is wrong, name exactly which vital is abnormal, what the normal range is, what the cluster average reads, and what condition or disease it could indicate. If everything is fine, briefly confirm which vitals are normal and why that is a good sign.
 
 3. End with one clear sentence of advice — either to maintain their current lifestyle, or to see a doctor as soon as possible.
 
 Rules:
 - Write in second person ("your", "you").
 - Do not use bullet points, headers, or lists. Write in paragraphs only.
-- Do not mention AI, models, or algorithms.
+- Do not mention AI, models, algorithms, or clusters.
 - Keep the total response under 150 words.
 
-Patient Details:
-  Gender: {patient_data['gender']}
-  Age: {patient_data['age']} years
-  Heart Rate: {patient_data['heart_rate']} bpm (normal: 60-100)
-  Respiratory Rate: {patient_data['respiratory_rate']} breaths/min (normal: 12-20)
-  Body Temperature: {patient_data['body_temp']} C (normal: 36.1-37.2)
-  Oxygen Saturation: {patient_data['oxygen_sat']}% (normal: 95-100)
-  Systolic BP: {patient_data['systolic_bp']} mmHg (normal: 90-120)
-  Diastolic BP: {patient_data['diastolic_bp']} mmHg (normal: 60-80)
-  BMI: {patient_data['bmi']:.1f} (normal: 18.5-24.9)
-  HRV: {patient_data['hrv']:.3f} (normal: 0.01-0.20)
-  Pulse Pressure: {patient_data['pulse_pressure']} mmHg (normal: 40-60)
-  Mean Arterial Pressure: {patient_data['map_value']:.1f} mmHg (normal: 70-100)
+Cluster Profile (Gender: {patient_data['gender']}, Cluster {patient_data['cluster_id']} of {patient_data['total_clusters']}, {patient_data['cluster_size']} patients):
+{fmt('Heart Rate',             'bpm',        '60–100')}
+{fmt('Respiratory Rate',       'breaths/min','12–20')}
+{fmt('Body Temperature',       'C',          '36.1–37.2')}
+{fmt('Oxygen Saturation',      '%',          '95–100')}
+{fmt('Age',                    'years',      '')}
+{fmt('Derived_HRV',            '',           '0.01–0.20')}
+{fmt('Derived_Pulse_Pressure', 'mmHg',       '40–60')}
+{fmt('Derived_BMI',            '',           '18.5–24.9')}
+{fmt('Derived_MAP',            'mmHg',       '70–100')}
 """
     response = groq_client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -222,21 +231,19 @@ if st.button("Run Analysis", type="primary", use_container_width=True):
         with st.spinner("Loading..."):
             try:
                 assessment = get_health_assessment({
-                    "gender":           gender,
-                    "age":              age,
-                    "heart_rate":       heart_rate,
-                    "respiratory_rate": respiratory_rate,
-                    "body_temp":        body_temp,
-                    "oxygen_sat":       oxygen_sat,
-                    "systolic_bp":      systolic_bp,
-                    "diastolic_bp":     diastolic_bp,
-                    "bmi":              bmi,
-                    "hrv":              hrv,
-                    "pulse_pressure":   pulse_pressure,
-                    "map_value":        map_value,
-                    "cluster_id":       cluster_id,
-                    "total_clusters":   len(centers),
-                    "cluster_size":     sizes.get(cluster_id, 0),
+                    "gender":         gender,
+                    "cluster_id":     cluster_id,
+                    "total_clusters": len(centers),
+                    "cluster_size":   sizes.get(cluster_id, 0),
+                    "cluster_stats":  {
+                        feat: {
+                            "mean": means.loc[cluster_id, (feat, "mean")],
+                            "std":  means.loc[cluster_id, (feat, "std")],
+                            "min":  means.loc[cluster_id, (feat, "min")],
+                            "max":  means.loc[cluster_id, (feat, "max")],
+                        }
+                        for feat in FEATURE_COLS
+                    },
                 })
                 st.markdown(f"""
                 <div style="background: #ffffff; border: 1.5px solid #e2e8f0;
