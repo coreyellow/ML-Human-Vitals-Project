@@ -3,7 +3,7 @@ import glob
 
 data_dir = 'Datasets'
 
-if __name__ == "__main__":
+def prepare_full_dataset():
     # Create full dataset by combining all individual case CSV files
     # Column names:
     # Case ID, Heart Rate, Respiratory Rate, Body Temperature, Oxygen Saturation, Age, Gender, Derived_HRV, Derived_Pulse_Pressure, Derived_BMI, Derived_MAP
@@ -94,3 +94,25 @@ if __name__ == "__main__":
     print(f"Total combined samples: {len(combined_data)}")
     print(f"Problematic cases: {len(problematic_cases)}")
     pd.DataFrame(combined_data).to_csv(f'{data_dir}/full_dataset.csv', index=False)
+
+def split_dataset_by_gender():
+    df = pd.read_csv(f'{data_dir}/full_dataset.csv')
+    df.drop(columns=['Case ID'], inplace=True)  # Drop Case ID as it's not needed for modeling
+    
+    male_df = df[df['Gender'] == 'M'].drop(columns=['Gender'])
+    female_df = df[df['Gender'] == 'F'].drop(columns=['Gender'])
+
+    print(f"Male samples: {len(male_df)}")
+    print(f"Female samples: {len(female_df)}")
+
+    male_df.to_csv(f'{data_dir}/male_dataset.csv', index=False)
+    female_df.to_csv(f'{data_dir}/female_dataset.csv', index=False)
+
+if __name__ == "__main__":
+    user_input = input("Do you want to prepare the full dataset? (y/n): ")
+    if user_input.lower() == 'y':
+        prepare_full_dataset()
+    
+    split_dataset_by_gender()
+        
+    
