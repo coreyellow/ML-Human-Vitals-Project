@@ -38,11 +38,7 @@ if __name__ == "__main__":
     male_features = df_male[['Heart Rate', 'Respiratory Rate', 'Body Temperature', 'Oxygen Saturation', 'Age', 'Derived_HRV', 'Derived_Pulse_Pressure', 'Derived_BMI', 'Derived_MAP']]
     female_features = df_female[['Heart Rate', 'Respiratory Rate', 'Body Temperature', 'Oxygen Saturation', 'Age', 'Derived_HRV', 'Derived_Pulse_Pressure', 'Derived_BMI', 'Derived_MAP']]
     print("Features extracted successfully.")
-
-    male_risk = df_male[['Risk Category']].to_numpy()
-    female_risk = df_female[['Risk Category']].to_numpy()
-    print("Risk categories extracted successfully.")
-
+    
     scaler_male = StandardScaler()
     scaler_female = StandardScaler()
 
@@ -54,9 +50,6 @@ if __name__ == "__main__":
     limit = 10000
     male_features_scaled = male_features_scaled[:limit]
     female_features_scaled = female_features_scaled[:limit]
-
-    male_risk = male_risk[:limit]
-    female_risk = female_risk[:limit]
     print(f"Data limited to {limit} samples for clustering.")
 
     # Setup memory caching for distance computations
@@ -117,29 +110,19 @@ if __name__ == "__main__":
             else:
                 silhouette_female = None
 
-            adjusted_rand_male = adjusted_rand_score(male_risk.flatten(), male_labels)
-            adjusted_rand_female = adjusted_rand_score(female_risk.flatten(), female_labels)
-
-            fowlkes_mallows_male = fowlkes_mallows_score(male_risk.flatten(), male_labels)
-            fowlkes_mallows_female = fowlkes_mallows_score(female_risk.flatten(), female_labels)
-
             evaluation_rows.append({
                 'linkage': linkage,
                 'distance_threshold': distance_threshold,
                 'gender': 'male',
                 'clusters': len(set(male_labels)),
-                'silhouette_score': silhouette_male,
-                'adjusted_rand_score': adjusted_rand_male,
-                'fowlkes_mallows_score': fowlkes_mallows_male
+                'silhouette_score': silhouette_male
             })
             evaluation_rows.append({
                 'linkage': linkage,
                 'distance_threshold': distance_threshold,
                 'gender': 'female',
                 'clusters': len(set(female_labels)),
-                'silhouette_score': silhouette_female,
-                'adjusted_rand_score': adjusted_rand_female,
-                'fowlkes_mallows_score': fowlkes_mallows_female
+                'silhouette_score': silhouette_female
             })
 
     # Save evaluation results to CSV
