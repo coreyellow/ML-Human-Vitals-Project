@@ -3,150 +3,88 @@ import numpy as np
 import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 output_dir = 'PCA_output'
+os.makedirs(output_dir, exist_ok=True)
 
-# Load the dataset
-df = pd.read_csv('Datasets/pca_dataset.csv')
-
-print("Original dataset shape:", df.shape)
-print("\nColumn names:")
-print(df.columns.tolist())
-print("\nFirst few rows:")
-print(df.head())
-
-# Separate numerical and categorical features
-# Exclude Patient ID, Timestamp, and Risk Category from PCA
 numerical_features = [
     'Heart Rate', 'Respiratory Rate', 'Body Temperature', 'Oxygen Saturation',
     'Age', 'Derived_HRV', 'Derived_Pulse_Pressure', 'Derived_BMI',
     'Derived_MAP'
 ]
 
-# Extract numerical data - only use features that exist in the dataframe
-available_features = [f for f in numerical_features if f in df.columns]
-numerical_features = available_features
+datasets = {
+    'male':   'Datasets/male_dataset.csv',
+    'female': 'Datasets/female_dataset.csv',
+}
 
-X = df[numerical_features].copy()
+for gender, path in datasets.items():
+    print("\n" + "="*60)
+    print(f"PCA ANALYSIS — {gender.upper()} DATASET")
+    print("="*60)
 
-print(f"\nNumerical features for PCA: {len(numerical_features)}")
-print("Features:", numerical_features)
+    # Load dataset
+    df = pd.read_csv(path)
+    print(f"Original dataset shape: {df.shape}")
 
-# Handle any missing values
-print(f"\nMissing values before cleaning:\n{X.isnull().sum()}")
-X = X.dropna()
+    # Use only features present in this dataset
+    available_features = [f for f in numerical_features if f in df.columns]
+    X = df[available_features].copy()
 
-print(f"Rows after removing NaN: {len(X)}")
+    print(f"Features used ({len(available_features)}): {available_features}")
 
-# Standardize the features (essential for PCA)
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+    # Handle missing values
+    print(f"Missing values before cleaning:\n{X.isnull().sum()}")
+    X = X.dropna()
+    print(f"Rows after removing NaN: {len(X):,}")
 
-print("\nPerforming PCA...")
+    # Standardise
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-# Apply PCA to retain 9 components (can't exceed number of features)
-pca = PCA(n_components=9)
-X_pca = pca.fit_transform(X_scaled)
+    # PCA — retain 7 components (~88% variance explained)
+    n_components = 7
+    pca = PCA(n_components=n_components)
+    X_pca = pca.fit_transform(X_scaled)
 
-print(f"\nPCA Results:")
-print(f"Original number of features: {len(numerical_features)}")
-print(f"Reduced number of components: {pca.n_components_}")
-print(f"Variance explained by {pca.n_components_} components: {pca.explained_variance_ratio_.sum():.4f}")
-print(f"\nVariance explained by each component:")
-for i, var in enumerate(pca.explained_variance_ratio_):
-    print(f"  PC{i+1}: {var:.4f} ({var*100:.2f}%)")
+    print(f"\nPCA Results:")
+    print(f"  Components: {pca.n_components_}")
+    print(f"  Total variance explained: {pca.explained_variance_ratio_.sum():.4f}")
+    print(f"  Variance per component:")
+    for i, var in enumerate(pca.explained_variance_ratio_):
+        print(f"    PC{i+1}: {var:.4f} ({var*100:.2f}%)")
 
-# Create visualization of cumulative variance explained
-cumsum_var = np.cumsum(pca.explained_variance_ratio_)
-plt.figure(figsize=(12, 5))
-
-# Plot 1: Cumulative explained variance
-plt.subplot(1, 2, 1)
-plt.plot(range(1, len(cumsum_var) + 1), cumsum_var, 'bo-', linewidth=2, markersize=6)
-plt.axhline(y=0.95, color='r', linestyle='--', label='95% Variance')
-plt.xlabel('Number of Components')
-plt.ylabel('Cumulative Explained Variance')
-plt.title('PCA: Cumulative Explained Variance')
-plt.grid(True, alpha=0.3)
-plt.legend()
-
-# Plot 2: Individual variance explained
-plt.subplot(1, 2, 2)
-plt.bar(range(1, len(pca.explained_variance_ratio_) + 1), pca.explained_variance_ratio_)
-plt.xlabel('Principal Component')
-plt.ylabel('Explained Variance Ratio')
-plt.title('PCA: Explained Variance by Component')
-plt.grid(True, alpha=0.3)
-
-plt.tight_layout()
-plt.savefig(os.path.join(output_dir, 'PCA_VAR_Analysis.png'), dpi=300, bbox_inches='tight')
-print("\nVisualization saved as 'PCA_VAR_Analysis.png'")
-
-# Create a DataFrame with PCA components
-pca_columns = [f'PC{i+1}' for i in range(X_pca.shape[1])]
-df_pca = pd.DataFrame(X_pca, columns=pca_columns)
-
-# Add back the categorical features from original dataframe (excluding rows with NaN)
-df_filtered = df.loc[X.index]
-df_pca['Gender'] = df_filtered['Gender'].values if 'Gender' in df.columns else 'Unknown'
-
-# Add Patient ID if available
-if 'Patient ID' in df.columns:
-    df_pca['Patient ID'] = df_filtered['Patient ID'].values
-
-print("\n" + "="*60)
-print("CLUSTERING-BASED ROW REDUCTION")
-print("="*60)
-
-# Keep all rows - no row reduction
-print(f"\nOriginal dataset size: {len(df_pca):,} rows")
-
-
-# Create final dataset (no clustering-based reduction)
-df_pca_reduced = df_pca.copy()
-
-print(f"\nFinal dataset size: {len(df_pca_reduced):,} rows")
-
-# Save the PCA-reduced dataset
-output_file = os.path.join(output_dir, 'HVS_PCA.csv')
-df_pca_reduced.to_csv(output_file, index=False)
-print(f"\nPCA-reduced dataset saved to '{output_file}'")
-print(f"Final dataset shape: {df_pca_reduced.shape}")
-print(f"Dimensionality reduction: {len(numerical_features)} → {pca.n_components_} features")
-print(f"All {len(df_pca_reduced):,} rows retained for clustering")
-
-# Print feature loadings (which original features contribute most to each PC)
-print("\n" + "="*60)
-print("PCA Component Loadings (Feature Contributions)")
-print("="*60)
-loadings = pd.DataFrame(
-    pca.components_.T,
-    columns=[f'PC{i+1}' for i in range(pca.n_components_)],
-    index=numerical_features
-)
-print(loadings.round(4))
-
-# Visualize loadings for the first two components
-if pca.n_components_ >= 2:
-    plt.figure(figsize=(16, 14))
-    for i, feature in enumerate(numerical_features):
-        plt.arrow(0, 0, loadings[f'PC1'].iloc[i], loadings[f'PC2'].iloc[i],
-                 head_width=0.02, head_length=0.02, fc='blue', ec='blue', alpha=0.7, linewidth=2)
-        plt.text(loadings[f'PC1'].iloc[i]*1.25, loadings[f'PC2'].iloc[i]*1.25, feature,
-                fontsize=12, ha='center', va='center', weight='bold',
-                bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow', alpha=0.3))
-    
-    plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.2f}%)', fontsize=14, weight='bold')
-    plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.2f}%)', fontsize=14, weight='bold')
-    plt.title('PCA Biplot: Feature Loadings on First Two Components', fontsize=16, weight='bold', pad=20)
-    plt.grid(True, alpha=0.3, linestyle='--')
-    plt.axhline(y=0, color='k', linewidth=1)
-    plt.axvline(x=0, color='k', linewidth=1)
+    # ── Variance by component bar chart ────────────────────────────────────
+    plt.figure(figsize=(8, 5))
+    plt.bar(range(1, n_components + 1), pca.explained_variance_ratio_)
+    plt.xlabel('Principal Component')
+    plt.ylabel('Explained Variance Ratio')
+    plt.title(f'PCA Variance by Component — {gender.capitalize()}')
+    plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, 'PCA_BIPLOT.png'), dpi=300, bbox_inches='tight')
-    print("\nBiplot saved as 'PCA_BIPLOT.png'")
+    var_plot_path = os.path.join(output_dir, f'PCA_VAR_Analysis_{gender}.png')
+    plt.savefig(var_plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"\nVariance plot saved: {var_plot_path}")
 
-print("\n✓ PCA analysis complete!")
+    # ── Build output DataFrame ──────────────────────────────────────────────
+    pca_columns = [f'PC{i+1}' for i in range(X_pca.shape[1])]
+    df_pca = pd.DataFrame(X_pca, columns=pca_columns, index=X.index)
+
+    # Save CSV
+    output_csv = os.path.join(output_dir, f'HVS_PCA_{gender}.csv')
+    df_pca.to_csv(output_csv, index=False)
+    print(f"PCA dataset saved:    {output_csv}")
+    print(f"Shape: {df_pca.shape}  ({len(available_features)} features → {n_components} components)")
+
+    # ── Feature loadings ────────────────────────────────────────────────────
+    print(f"\nPCA Component Loadings:")
+    loadings = pd.DataFrame(
+        pca.components_.T,
+        columns=pca_columns,
+        index=available_features
+    )
+    print(loadings.round(4))
+
+print("\n✓ PCA analysis complete for male and female datasets!")
