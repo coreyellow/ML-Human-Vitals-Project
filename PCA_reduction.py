@@ -4,8 +4,10 @@ import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+import joblib
 
 output_dir = 'PCA_output'
+clustering_dir = 'Clustering_data'
 os.makedirs(output_dir, exist_ok=True)
 
 numerical_features = [
@@ -47,6 +49,12 @@ for gender, path in datasets.items():
     n_components = 7
     pca = PCA(n_components=n_components)
     X_pca = pca.fit_transform(X_scaled)
+
+    # Save scaler and PCA
+    scaler_path = os.path.join(clustering_dir, f'scaler_{gender}.pkl')
+    pca_path = os.path.join(clustering_dir, f'pca_{gender}.pkl')
+    joblib.dump(scaler, scaler_path)
+    joblib.dump(pca, pca_path)
 
     print(f"\nPCA Results:")
     print(f"  Components: {pca.n_components_}")
