@@ -26,13 +26,15 @@ def prepare_full_dataset():
         gender = case_metadata['sex'].values[0]
         bmi = float(case_metadata['bmi'].values[0])
         
-        # Select 3 random samples from each case
+        # Select 10 random samples from each case
         valid_rows = 0
         attempts = 0
+        max_attempts = 5000
+        random_samples = 10
         
-        while valid_rows < 3:
+        while valid_rows < random_samples:
             # Avoid case with too many missing values
-            if attempts > 5000:
+            if attempts > max_attempts:
                 print(f"Too many attempts for case {case_id}, moving to next case.")
                 problematic_cases.append(case_id)
                 break
@@ -88,7 +90,7 @@ def prepare_full_dataset():
             })
             
             valid_rows += 1
-            print(f"Processed case {case_id}, samples: {valid_rows}/3")
+            print(f"Processed case {case_id}, samples: {valid_rows}/{random_samples}")
 
     # Save combined dataset
     print(f"Total combined samples: {len(combined_data)}")
