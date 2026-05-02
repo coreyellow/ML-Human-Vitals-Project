@@ -28,28 +28,16 @@ def print_cluster_summary(label, features, title):
     print(centers_df.to_string())
 
 if __name__ == "__main__":
-    df_male = pd.read_csv('Datasets/male_dataset.csv')
-    df_female = pd.read_csv('Datasets/female_dataset.csv')
+    df_male = pd.read_csv('PCA_output/HVS_PCA_male.csv')
+    df_female = pd.read_csv('PCA_output/HVS_PCA_female.csv')
     print("CSV files loaded successfully.")
     print(f"Male dataset shape: {df_male.shape}")
     print(f"Female dataset shape: {df_female.shape}")
 
-    # Standardize features
-    male_features = df_male[['Heart Rate', 'Respiratory Rate', 'Body Temperature', 'Oxygen Saturation', 'Age', 'Derived_HRV', 'Derived_Pulse_Pressure', 'Derived_BMI', 'Derived_MAP']]
-    female_features = df_female[['Heart Rate', 'Respiratory Rate', 'Body Temperature', 'Oxygen Saturation', 'Age', 'Derived_HRV', 'Derived_Pulse_Pressure', 'Derived_BMI', 'Derived_MAP']]
-    print("Features extracted successfully.")
-    
-    scaler_male = StandardScaler()
-    scaler_female = StandardScaler()
-
-    male_features_scaled = scaler_male.fit_transform(male_features)
-    female_features_scaled = scaler_female.fit_transform(female_features)
-    print("Features standardized successfully.")
-
     # Sample limit
     limit = 10000
-    male_features_scaled = male_features_scaled[:limit]
-    female_features_scaled = female_features_scaled[:limit]
+    male_features = df_male.values[:limit]
+    female_features = df_female.values[:limit]
     print(f"Data limited to {limit} samples for clustering.")
 
     # Setup memory caching for distance computations
@@ -62,32 +50,31 @@ if __name__ == "__main__":
     memory_female = Memory(cache_dir_female, verbose=1)
 
     # Perform agglomerative clustering for each linkage type and threshold
-    # Smaller distance_threshold = more clusters, larger distance_threshold = fewer clusters
     linkage_types = ['ward', 'complete', 'average', 'single']
-    distance_thresholds = [1, 1.5, 2, 2.5, 3, 4, 5, 10, 20, 40]
+    k_clusters = [10, 15, 20, 30, 50]
     labels = {}
 
     # Precompute distance matrices for efficient silhouette score evaluation
     print("\nPrecomputing distance matrices for faster evaluation...")
-    male_distance_matrix = squareform(pdist(male_features_scaled, metric='euclidean'))
-    female_distance_matrix = squareform(pdist(female_features_scaled, metric='euclidean'))
+    male_distance_matrix = squareform(pdist(male_features, metric='euclidean'))
+    female_distance_matrix = squareform(pdist(female_features, metric='euclidean'))
 
     for linkage in linkage_types:
         print(f"\nStarting agglomerative clustering for linkage='{linkage}'...")
         labels[linkage] = {}
-        for distance_threshold in distance_thresholds:
-            male_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage, memory=memory_male)
-            female_agglo = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold, linkage=linkage, memory=memory_female)
-            
-            male_labels = male_agglo.fit_predict(male_features_scaled)
-            female_labels = female_agglo.fit_predict(female_features_scaled)
+        for k in k_clusters:
+            male_agglo = AgglomerativeClustering(n_clusters=k, linkage=linkage, memory=memory_male)
+            female_agglo = AgglomerativeClustering(n_clusters=k, linkage=linkage, memory=memory_female)
 
-            labels[linkage][distance_threshold] = {
+            male_labels = male_agglo.fit_predict(male_features)
+            female_labels = female_agglo.fit_predict(female_features)
+
+            labels[linkage][k] = {
                 'male': male_labels,
                 'female': female_labels
             }
 
-            print(f"Agglomerative clustering completed for linkage={linkage}, distance_threshold={distance_threshold}.")
+            print(f"Agglomerative clustering completed for linkage={linkage}, n_clusters={k}.")
     # Save directory for evaluation and labels
     save_directory = "Clustering_data/"
 
@@ -95,10 +82,10 @@ if __name__ == "__main__":
     evaluation_rows = []
     print()
     for linkage in linkage_types:
-        for distance_threshold in distance_thresholds:
-            print(f"Evaluating clustering performance for linkage={linkage}, distance_threshold={distance_threshold}...")
-            male_labels = labels[linkage][distance_threshold]['male']
-            female_labels = labels[linkage][distance_threshold]['female']
+        for k in k_clusters:
+            print(f"Evaluating clustering performance for linkage={linkage}, n_clusters={k}...")
+            male_labels = labels[linkage][k]['male']
+            female_labels = labels[linkage][k]['female']
 
             if len(set(male_labels)) > 1:
                 silhouette_male = silhouette_score(male_distance_matrix, male_labels, metric='precomputed')
@@ -112,16 +99,14 @@ if __name__ == "__main__":
 
             evaluation_rows.append({
                 'linkage': linkage,
-                'distance_threshold': distance_threshold,
+                'clusters': k,
                 'gender': 'male',
-                'clusters': len(set(male_labels)),
                 'silhouette_score': silhouette_male
             })
             evaluation_rows.append({
                 'linkage': linkage,
-                'distance_threshold': distance_threshold,
+                'clusters': k,
                 'gender': 'female',
-                'clusters': len(set(female_labels)),
                 'silhouette_score': silhouette_female
             })
 
@@ -133,17 +118,12 @@ if __name__ == "__main__":
     
     # Save labels
     save_linkage = 'ward'
-    save_distance_threshold = 20
+    save_k = 20
 
-    male_labels = labels[save_linkage][save_distance_threshold]['male']
-    female_labels = labels[save_linkage][save_distance_threshold]['female']
-    joblib.dump(male_labels, f"{save_directory}male_clustering_labels_{save_linkage}_{save_distance_threshold}.joblib")
-    joblib.dump(female_labels, f"{save_directory}female_clustering_labels_{save_linkage}_{save_distance_threshold}.joblib")
-    print(f"Saved male/female labels for linkage={save_linkage}, distance_threshold={save_distance_threshold}.")
-
-    # Save the scalers for future processing
-    joblib.dump(scaler_male, f"{save_directory}scaler_male.joblib")
-    joblib.dump(scaler_female, f"{save_directory}scaler_female.joblib")
-    print("Scalers saved successfully.")
+    male_labels = labels[save_linkage][save_k]['male']
+    female_labels = labels[save_linkage][save_k]['female']
+    joblib.dump(male_labels, f"{save_directory}male_clustering_labels_{save_linkage}_{save_k}.joblib")
+    joblib.dump(female_labels, f"{save_directory}female_clustering_labels_{save_linkage}_{save_k}.joblib")
+    print(f"Saved male/female labels for linkage={save_linkage}, n_clusters={save_k}.")
     
 
