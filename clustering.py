@@ -1,10 +1,8 @@
-import numpy as np
 import pandas as pd
 import joblib
 from joblib import Memory
 from sklearn.cluster import AgglomerativeClustering
-from sklearn.metrics import silhouette_score, fowlkes_mallows_score, adjusted_rand_score
-from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
 from scipy.spatial.distance import pdist, squareform
 import os
 
