@@ -116,7 +116,7 @@ if __name__ == "__main__":
     
     # Save labels
     save_linkage = 'ward'
-    save_k = 20
+    save_k = 50
 
     male_labels = labels[save_linkage][save_k]['male']
     female_labels = labels[save_linkage][save_k]['female']
