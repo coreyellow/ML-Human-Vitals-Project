@@ -51,8 +51,8 @@ for gender, path in datasets.items():
     X_pca = pca.fit_transform(X_scaled)
 
     # Save scaler and PCA
-    scaler_path = os.path.join(clustering_dir, f'scaler_{gender}.pkl')
-    pca_path = os.path.join(clustering_dir, f'pca_{gender}.pkl')
+    scaler_path = os.path.join(clustering_dir, f'pca_scaler_{gender}.joblib')
+    pca_path = os.path.join(clustering_dir, f'pca_model_{gender}.joblib')
     joblib.dump(scaler, scaler_path)
     joblib.dump(pca, pca_path)
 

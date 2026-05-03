@@ -28,10 +28,15 @@ groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 # Load artefacts
 @st.cache_resource
 def load_artefacts():
-    scaler_male   = joblib.load(ROOT / "Clustering_data/scaler_male.joblib")
-    scaler_female = joblib.load(ROOT / "Clustering_data/scaler_female.joblib")
-    labels_male   = joblib.load(ROOT / "Clustering_data/male_clustering_labels_ward_20.joblib")
-    labels_female = joblib.load(ROOT / "Clustering_data/female_clustering_labels_ward_20.joblib")
+    pca_scaler_male   = joblib.load(ROOT / "Clustering_data/pca_scaler_male.joblib")
+    pca_scaler_female = joblib.load(ROOT / "Clustering_data/pca_scaler_female.joblib")
+    pca_model_male    = joblib.load(ROOT / "Clustering_data/pca_model_male.joblib")
+    pca_model_female  = joblib.load(ROOT / "Clustering_data/pca_model_female.joblib")
+    labels_male       = joblib.load(ROOT / "Clustering_data/male_clustering_labels_ward_50.joblib")
+    labels_female     = joblib.load(ROOT / "Clustering_data/female_clustering_labels_ward_50.joblib")
+
+    df_male_pca   = pd.read_csv(ROOT / "PCA_output/HVS_PCA_male.csv")
+    df_female_pca = pd.read_csv(ROOT / "PCA_output/HVS_PCA_female.csv")
 
     df_male   = pd.read_csv(ROOT / "Datasets/male_dataset.csv")
     df_female = pd.read_csv(ROOT / "Datasets/female_dataset.csv")
@@ -41,26 +46,24 @@ def load_artefacts():
         "Oxygen Saturation", "Age",
         "Derived_HRV", "Derived_Pulse_Pressure", "Derived_BMI", "Derived_MAP",
     ]
+    PC_COLS = [f"PC{i+1}" for i in range(7)]
 
-    male_features   = df_male[FEATURE_COLS].values
-    female_features = df_female[FEATURE_COLS].values
-
-    def build_centers(features, scaler, labels):
-        scaled = scaler.transform(pd.DataFrame(features[: len(labels)], columns=FEATURE_COLS))
+    def build_centers(df_pca, labels):
+        pca_vals = df_pca[PC_COLS].values[:len(labels)]
         centers = {}
         for cid in np.unique(labels):
             mask = labels == cid
-            centers[cid] = scaled[mask].mean(axis=0)
+            centers[cid] = pca_vals[mask].mean(axis=0)
         return centers
 
-    male_centers   = build_centers(male_features,   scaler_male,   labels_male)
-    female_centers = build_centers(female_features, scaler_female, labels_female)
+    male_centers   = build_centers(df_male_pca,   labels_male)
+    female_centers = build_centers(df_female_pca, labels_female)
 
     male_sizes   = pd.Series(labels_male).value_counts().to_dict()
     female_sizes = pd.Series(labels_female).value_counts().to_dict()
 
     def cluster_means(df, labels):
-        sub = df[FEATURE_COLS].iloc[: len(labels)].copy()
+        sub = df[FEATURE_COLS].iloc[:len(labels)].copy()
         sub["_cluster"] = labels
         return sub.groupby("_cluster")[FEATURE_COLS].agg(["mean", "std", "min", "max"])
 
@@ -68,18 +71,20 @@ def load_artefacts():
     female_means = cluster_means(df_female, labels_female)
 
     return (
-        scaler_male, scaler_female,
-        male_centers, female_centers,
-        male_sizes,   female_sizes,
-        male_means,   female_means,
+        pca_scaler_male, pca_scaler_female,
+        pca_model_male,  pca_model_female,
+        male_centers,    female_centers,
+        male_sizes,      female_sizes,
+        male_means,      female_means,
     )
 
 
 (
-    scaler_male, scaler_female,
-    male_centers, female_centers,
-    male_sizes,   female_sizes,
-    male_means,   female_means,
+    pca_scaler_male, pca_scaler_female,
+    pca_model_male,  pca_model_female,
+    male_centers,    female_centers,
+    male_sizes,      female_sizes,
+    male_means,      female_means,
 ) = load_artefacts()
 
 
@@ -90,12 +95,13 @@ FEATURE_COLS = [
     "Derived_HRV", "Derived_Pulse_Pressure", "Derived_BMI", "Derived_MAP",
 ]
 
-def predict_cluster(feature_vec, scaler, centers):
+def predict_cluster(feature_vec, pca_scaler, pca_model, centers):
     input_df      = pd.DataFrame([feature_vec], columns=FEATURE_COLS)
-    scaled        = scaler.transform(input_df)
+    scaled        = pca_scaler.transform(input_df)
+    pca_vec       = pca_model.transform(scaled)
     center_ids    = list(centers.keys())
     center_matrix = np.array([centers[c] for c in center_ids])
-    dists         = cdist(scaled, center_matrix, metric="euclidean")[0]
+    dists         = cdist(pca_vec, center_matrix, metric="euclidean")[0]
     best_idx      = int(np.argmin(dists))
     return center_ids[best_idx], dists[best_idx]
 
@@ -148,6 +154,75 @@ Cluster Profile (Gender: {patient_data['gender']}, Cluster {patient_data['cluste
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=300,
+    )
+    return response.choices[0].message.content.strip()
+
+
+def get_individual_assessment(patient_data: dict) -> str:
+    iv = patient_data["individual_vitals"]
+
+    prompt = f"""
+You are a clinical health analyst reviewing a single patient's vital signs directly.
+Your job is to give a clear verdict on whether this specific patient is likely healthy or should seek medical help.
+
+Follow this exact structure in your response:
+
+1. Start with one of these two opening sentences, whichever applies:
+   - "Your vitals look healthy. You do not need to seek medical attention at this time."
+   - "Based on your vitals, you should seek medical attention."
+
+2. Then explain why in plain English. If something is wrong, name exactly which vital is abnormal, what the normal range is, what the reading is, and what condition it could indicate. If everything is fine, briefly confirm which vitals are normal.
+
+3. End with one clear sentence of advice.
+
+Rules:
+- Write in second person ("your", "you").
+- Do not use bullet points, headers, or lists. Write in paragraphs only.
+- Do not mention AI, models, algorithms, or clusters.
+- Keep the total response under 150 words.
+
+Patient (Gender: {patient_data['gender']}, Age: {iv['Age']} years):
+  Heart Rate:             {iv['Heart Rate']:.1f} bpm            (normal: 60–100)
+  Respiratory Rate:       {iv['Respiratory Rate']:.1f} breaths/min  (normal: 12–20)
+  Body Temperature:       {iv['Body Temperature']:.1f} C             (normal: 36.1–37.2)
+  Oxygen Saturation:      {iv['Oxygen Saturation']:.1f} %             (normal: 95–100)
+  HRV:                    {iv['Derived_HRV']:.4f}               (normal: 0.01–0.20)
+  Pulse Pressure:         {iv['Derived_Pulse_Pressure']:.1f} mmHg          (normal: 40–60)
+  BMI:                    {iv['Derived_BMI']:.1f}                (normal: 18.5–24.9)
+  Mean Arterial Pressure: {iv['Derived_MAP']:.1f} mmHg          (normal: 70–100)
+"""
+    response = groq_client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=300,
+    )
+    return response.choices[0].message.content.strip()
+
+
+def get_combined_conclusion(individual_assessment: str, cluster_assessment: str, gender: str) -> str:
+    prompt = f"""
+You are a senior clinical health analyst. You have been given two separate health assessments for the same patient (Gender: {gender}):
+
+Assessment 1 — Based on the patient's own individual vitals:
+{individual_assessment}
+
+Assessment 2 — Based on the statistical profile of similar patients:
+{cluster_assessment}
+
+Your task: Write a single combined conclusion that reconciles both assessments into one clear, final verdict.
+
+Rules:
+- Start with either "Overall, your vitals appear healthy." or "Overall, you should seek medical attention."
+- If the two assessments agree, reinforce the shared finding briefly.
+- If they disagree, flag the discrepancy and recommend the cautious option (seek attention).
+- Write in second person, in plain paragraphs, no lists or headers.
+- Do not mention AI, models, algorithms, or assessments.
+- Keep the total response under 120 words.
+"""
+    response = groq_client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=250,
     )
     return response.choices[0].message.content.strip()
 
@@ -215,11 +290,11 @@ if st.button("Run Analysis", type="primary", use_container_width=True):
     ], dtype=float)
 
     if gender == "Male":
-        scaler, centers, sizes, means = scaler_male,   male_centers,   male_sizes,   male_means
+        pca_scaler, pca_model, centers, sizes, means = pca_scaler_male,   pca_model_male,   male_centers,   male_sizes,   male_means
     else:
-        scaler, centers, sizes, means = scaler_female, female_centers, female_sizes, female_means
+        pca_scaler, pca_model, centers, sizes, means = pca_scaler_female, pca_model_female, female_centers, female_sizes, female_means
 
-    cluster_id, dist = predict_cluster(feature_vec, scaler, centers)
+    cluster_id, dist = predict_cluster(feature_vec, pca_scaler, pca_model, centers)
 
     # Health assessment
     st.divider()
@@ -228,31 +303,79 @@ if st.button("Run Analysis", type="primary", use_container_width=True):
     if not api_key or api_key == "your-groq-api-key-here":
         st.warning("Add your Groq API key to the .env file to enable the health assessment.")
     else:
-        with st.spinner("Loading..."):
+        with st.spinner("Analysing your vitals..."):
             try:
-                assessment = get_health_assessment({
+                individual_vitals = {
+                    "Heart Rate":             heart_rate,
+                    "Respiratory Rate":       respiratory_rate,
+                    "Body Temperature":       body_temp,
+                    "Oxygen Saturation":      float(oxygen_sat),
+                    "Age":                    float(age),
+                    "Derived_HRV":            hrv,
+                    "Derived_Pulse_Pressure": float(pulse_pressure),
+                    "Derived_BMI":            bmi,
+                    "Derived_MAP":            map_value,
+                }
+
+                cluster_stats = {
+                    feat: {
+                        "mean": means.loc[cluster_id, (feat, "mean")],
+                        "std":  means.loc[cluster_id, (feat, "std")],
+                        "min":  means.loc[cluster_id, (feat, "min")],
+                        "max":  means.loc[cluster_id, (feat, "max")],
+                    }
+                    for feat in FEATURE_COLS
+                }
+
+                # Call 1 — individual vitals
+                individual_assessment = get_individual_assessment({
+                    "gender":            gender,
+                    "individual_vitals": individual_vitals,
+                })
+
+                # Call 2 — cluster profile
+                cluster_assessment = get_health_assessment({
                     "gender":         gender,
                     "cluster_id":     cluster_id,
                     "total_clusters": len(centers),
                     "cluster_size":   sizes.get(cluster_id, 0),
-                    "cluster_stats":  {
-                        feat: {
-                            "mean": means.loc[cluster_id, (feat, "mean")],
-                            "std":  means.loc[cluster_id, (feat, "std")],
-                            "min":  means.loc[cluster_id, (feat, "min")],
-                            "max":  means.loc[cluster_id, (feat, "max")],
-                        }
-                        for feat in FEATURE_COLS
-                    },
+                    "cluster_stats":  cluster_stats,
                 })
-                st.markdown(f"""
-                <div style="background: #ffffff; border: 1.5px solid #e2e8f0;
-                            border-left: 5px solid #3b82f6; border-radius: 12px;
-                            padding: 1.25rem 1.5rem; font-size: 0.97rem;
-                            line-height: 1.75; color: #1e293b;
-                            box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    {assessment}
+
+                # Call 3 — combined conclusion
+                combined = get_combined_conclusion(individual_assessment, cluster_assessment, gender)
+
+                def assessment_card(title, body, border_color):
+                    return f"""
+                    <div style="background:#ffffff; border:1.5px solid #e2e8f0;
+                                border-left:5px solid {border_color}; border-radius:12px;
+                                padding:1.25rem 1.5rem; font-size:0.97rem;
+                                line-height:1.75; color:#1e293b;
+                                box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:1rem;">
+                        <div style="font-size:0.75rem; font-weight:700; color:{border_color};
+                                    text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem;">
+                            {title}
+                        </div>
+                        {body}
+                    </div>"""
+
+                st.markdown(assessment_card("Your Health Assessment", combined, "#059669"), unsafe_allow_html=True)
+
+                st.markdown("""
+                <div style="background:#fffbeb; border:1.5px solid #fcd34d;
+                            border-left:5px solid #f59e0b; border-radius:12px;
+                            padding:1.25rem 1.5rem; font-size:0.9rem;
+                            line-height:1.75; color:#92400e;
+                            box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:1rem;">
+                    <div style="font-size:0.75rem; font-weight:700; color:#f59e0b;
+                                text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem;">
+                        Medical claimer
+                    </div>
+                    This analysis is for informational purposes only and does not constitute medical advice, diagnosis, or treatment.
+                    Always consult a qualified healthcare professional before making any decisions about your health.
+                    In an emergency, call your local emergency services immediately.
                 </div>
                 """, unsafe_allow_html=True)
+
             except Exception as e:
                 st.error(f"Could not generate assessment: {e}")
