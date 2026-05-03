@@ -134,8 +134,8 @@ def summarize_clusters_with_llm(
 
 if __name__ == "__main__":
     # Which clustering hyperparameters to evaluate
-    linkage = "average"
-    clusters = 20
+    linkage = "ward"
+    clusters = 50
     
     scaler_male = joblib.load("Clustering_data/scaler_male.pkl")
     scaler_female = joblib.load("Clustering_data/scaler_female.pkl")
